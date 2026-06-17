@@ -423,9 +423,8 @@ const TODAY = new Date(); TODAY.setHours(0,0,0,0);
 let selectedDate = new Date(TODAY);
 let statusFilter = 'all';
 
-// In-memory cache of watering dates, synced with window.storage
+// In-memory cache of watering dates, persisted via localStorage
 const waterLog = {};
-let storageReady = false;
 
 function storageKey(name) { return 'wlast_' + name.replace(/\s+/g,'_'); }
 
@@ -451,22 +450,19 @@ function getLastWatered(p) {
   return d;
 }
 
-async function setLastWatered(name, date) {
+function setLastWatered(name, date) {
   const d = new Date(date);
   d.setHours(0,0,0,0);
   const iso = d.toISOString();
   waterLog[name] = iso;
-  try { await window.storage.set(storageKey(name), iso, true); } catch(e) { console.warn('storage set failed', e); }
+  try { localStorage.setItem(storageKey(name), iso); } catch(e) { console.warn('localStorage failed', e); }
 }
 
-async function loadWaterLog() {
+function loadWaterLog() {
   for (const p of plants) {
-    try {
-      const result = await window.storage.get(storageKey(p.name), true);
-      if (result && result.value) waterLog[p.name] = result.value;
-    } catch(e) { /* not set yet */ }
+    const stored = localStorage.getItem(storageKey(p.name));
+    if (stored) waterLog[p.name] = stored;
   }
-  storageReady = true;
 }
 
 function getDaysUntilDue(p, viewDate) {
@@ -476,8 +472,8 @@ function getDaysUntilDue(p, viewDate) {
   return Math.round((next - viewDate) / 86400000);
 }
 
-async function initWaterTab() {
-  if (!storageReady) await loadWaterLog();
+function initWaterTab() {
+  loadWaterLog();
   updateViewingLabel();
   buildCalStrip();
   renderSchedule();
@@ -613,8 +609,8 @@ function renderSchedule() {
   }
 }
 
-async function logWatered(name) {
-  await setLastWatered(name, new Date(TODAY));
+function logWatered(name) {
+  setLastWatered(name, new Date(TODAY));
   buildCalStrip();
   renderSchedule();
 }

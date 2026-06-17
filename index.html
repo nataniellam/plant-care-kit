@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Plant Care Kit — Singapore Edition</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: #f7f6f2;
+      color: #1a1a1a;
+      min-height: 100vh;
+      padding: 2rem 1rem 4rem;
+    }
+
+    .kit-wrap { max-width: 980px; margin: 0 auto; }
+
+    .kit-header { text-align: center; margin-bottom: 1.5rem; }
+    .kit-header h1 { font-family: 'Playfair Display', serif; font-size: 2.2rem; font-weight: 600; letter-spacing: -.5px; color: #1a1a1a; margin-bottom: .3rem; }
+    .kit-header p { font-size: 12px; color: #888; font-weight: 300; letter-spacing: .7px; text-transform: uppercase; }
+
+    .tab-bar { display: flex; gap: 4px; margin-bottom: 1.5rem; background: #eeede9; padding: 4px; border-radius: 14px; border: 0.5px solid #d0cfc8; }
+    .tab-btn { flex: 1; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; padding: 8px 12px; border-radius: 10px; border: none; background: transparent; color: #666; cursor: pointer; transition: all .18s; }
+    .tab-btn.active { background: #fff; color: #1a1a1a; border: 0.5px solid #d0cfc8; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+
+    /* Climate banner */
+    .climate-banner { display: flex; align-items: flex-start; gap: 12px; background: #eeede9; border: 0.5px solid #ccc; border-radius: 14px; padding: 12px 16px; margin-bottom: 1.5rem; }
+    .climate-text { font-size: 12.5px; color: #1a1a1a; line-height: 1.55; }
+    .climate-text strong { font-weight: 500; }
+    .climate-pills { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
+    .climate-pill { font-size: 10.5px; font-weight: 500; padding: 2px 8px; border-radius: 10px; background: #EAF3DE; color: #3B6D11; }
+    .climate-pill.warn { background: #FAEEDA; color: #854F0B; }
+    .climate-pill.info { background: #E6F1FB; color: #185FA5; }
+
+    /* Legend */
+    .legend { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 1.2rem; padding: 10px 12px; background: #eeede9; border-radius: 14px; border: 0.5px solid #d0cfc8; }
+    .legend-title { font-size: 10px; font-weight: 500; color: #888; text-transform: uppercase; letter-spacing: .4px; width: 100%; margin-bottom: 2px; }
+    .legend-item { font-size: 10.5px; font-weight: 500; padding: 2px 8px; border-radius: 10px; }
+
+    /* Controls */
+    .controls { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 1.5rem; }
+    .search-wrap input { font-family: 'DM Sans', sans-serif; font-size: 13px; padding: 8px 16px; border-radius: 20px; border: 0.5px solid #ccc; background: #fff; color: #1a1a1a; width: 280px; outline: none; transition: border-color .18s; }
+    .search-wrap input:focus { border-color: #3B6D11; }
+    .filter-bar { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+    .filter-btn { font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 500; padding: 5px 12px; border-radius: 16px; border: 0.5px solid #ccc; background: #fff; color: #666; cursor: pointer; transition: all .18s; }
+    .filter-btn.active, .filter-btn:hover { background: #3B6D11; color: #EAF3DE; border-color: #3B6D11; }
+
+    /* Plant grid */
+    .plant-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(285px, 1fr)); gap: 16px; }
+    .plant-card { background: #fff; border-radius: 14px; border: 0.5px solid #ddd; overflow: hidden; transition: transform .2s, box-shadow .2s; }
+    .plant-card.new-card { border-color: #97C459; }
+    .plant-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,.07); }
+    .plant-img { width: 100%; height: 165px; object-fit: cover; display: block; background: #e8f3e2; }
+    .plant-img-placeholder { width: 100%; height: 165px; background: #e8f3e2; display: none; align-items: center; justify-content: center; font-size: 36px; }
+    .plant-body { padding: .9rem 1rem 1rem; }
+    .plant-name { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 600; color: #1a1a1a; margin-bottom: 1px; }
+    .plant-sci { font-size: 11px; color: #888; font-style: italic; margin-bottom: 8px; }
+    .badge-row { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; }
+    .difficulty-badge, .new-badge, .loc-badge { font-size: 9.5px; font-weight: 500; padding: 2px 7px; border-radius: 10px; }
+    .diff-easy { background: #EAF3DE; color: #3B6D11; }
+    .diff-moderate { background: #FAEEDA; color: #854F0B; }
+    .diff-hard { background: #FCEBEB; color: #A32D2D; }
+    .new-badge { background: #97C459; color: #173404; }
+    .loc-badge { background: #E6F1FB; color: #185FA5; }
+
+    .care-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 6px; }
+    .care-item { background: #f5f4f0; border-radius: 8px; padding: 7px 9px; }
+    .care-icon-label { display: flex; align-items: center; gap: 4px; margin-bottom: 2px; }
+    .care-icon { width: 13px; height: 13px; flex-shrink: 0; }
+    .care-label { font-size: 9px; font-weight: 500; color: #888; text-transform: uppercase; letter-spacing: .4px; }
+    .care-value { font-size: 11.5px; color: #1a1a1a; line-height: 1.4; }
+
+    .fert-section { border-top: 0.5px solid #e0dfd8; margin-top: 6px; padding-top: 6px; }
+    .fert-label { font-size: 9px; font-weight: 500; color: #888; text-transform: uppercase; letter-spacing: .4px; margin-bottom: 5px; }
+    .fert-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 5px; }
+    .fert-tag { font-size: 10px; font-weight: 500; padding: 2px 7px; border-radius: 9px; }
+    .ft-banana { background: #FAEEDA; color: #854F0B; }
+    .ft-rice { background: #E6F1FB; color: #185FA5; }
+    .ft-egg { background: #FBEAF0; color: #993556; }
+    .ft-coffee { background: #F1EFE8; color: #5F5E5A; }
+    .ft-compost { background: #EAF3DE; color: #3B6D11; }
+    .ft-combo { background: #E1F5EE; color: #0F6E56; }
+    .fert-note-text { font-size: 11px; color: #666; line-height: 1.45; margin-bottom: 5px; }
+    .fert-avoid { font-size: 10.5px; color: #A32D2D; background: #FCEBEB; border-radius: 8px; padding: 5px 8px; line-height: 1.4; }
+    .sg-tip { font-size: 10.5px; color: #185FA5; background: #E6F1FB; border-radius: 8px; padding: 6px 8px; margin-top: 6px; line-height: 1.45; }
+    .sg-tip-label { font-weight: 500; }
+    .no-results { text-align: center; padding: 2.5rem; color: #888; font-size: 13px; grid-column: 1/-1; }
+
+    /* Watering tab — dynamic */
+    .tip-box { background: #eeede9; border: 0.5px solid #d0cfc8; border-radius: 14px; padding: 10px 14px; margin-bottom: 1rem; font-size: 12.5px; color: #1a1a1a; line-height: 1.55; }
+    .tip-box strong { font-weight: 500; }
+    .section-label { font-size: 10px; font-weight: 500; color: #888; text-transform: uppercase; letter-spacing: .5px; margin: 1rem 0 .6rem; }
+    .today-bar { display: flex; align-items: center; justify-content: space-between; background: #eeede9; border: 0.5px solid #d0cfc8; border-radius: 14px; padding: 10px 14px; margin-bottom: 1.2rem; gap: 10px; flex-wrap: wrap; }
+    .today-label { font-size: 12px; font-weight: 500; color: #888; text-transform: uppercase; letter-spacing: .4px; }
+    .today-date { font-size: 14px; font-weight: 500; color: #1a1a1a; }
+    .cal-strip { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 1.5rem; }
+    .cal-day { text-align: center; padding: 8px 2px 6px; border-radius: 8px; border: 0.5px solid #ddd; cursor: pointer; transition: all .15s; background: #fff; }
+    .cal-day:hover:not(.selected) { background: #eeede9; }
+    .cal-day.selected { background: #185FA5; border-color: #185FA5; }
+    .cal-day.today-marker { border-color: #3B6D11; }
+    .cal-day .cd-name { font-size: 9px; font-weight: 500; color: #888; text-transform: uppercase; letter-spacing: .3px; }
+    .cal-day .cd-date { font-size: 15px; font-weight: 500; color: #1a1a1a; margin: 2px 0; }
+    .cal-day.selected .cd-name, .cal-day.selected .cd-date { color: #fff; }
+    .cal-day.today-marker .cd-name { color: #3B6D11; }
+    .cal-day .cd-dots { display: flex; justify-content: center; gap: 2px; min-height: 6px; margin-top: 2px; }
+    .cd-dot { width: 4px; height: 4px; border-radius: 50%; background: #378ADD; }
+    .schedule-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(265px, 1fr)); gap: 12px; }
+    .sched-card { background: #fff; border-radius: 14px; border: 0.5px solid #ddd; padding: .9rem 1rem; }
+    .sched-card.due-today { border: 0.5px solid #85B7EB; border-left: 3px solid #185FA5; }
+    .sched-card.overdue { border: 0.5px solid #E8AAAA; border-left: 3px solid #A32D2D; }
+    .s-name { font-family: 'Playfair Display', serif; font-size: .95rem; font-weight: 600; color: #1a1a1a; margin-bottom: 1px; }
+    .s-sci { font-size: 10.5px; color: #888; font-style: italic; margin-bottom: 8px; }
+    .s-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 5px; }
+    .s-status { font-size: 11px; font-weight: 500; }
+    .s-status.due { color: #185FA5; }
+    .s-status.overdue { color: #A32D2D; }
+    .s-status.ok { color: #3B6D11; }
+    .s-last { font-size: 10.5px; color: #888; margin-bottom: 6px; }
+    .freq-badge { font-size: 9.5px; font-weight: 500; padding: 2px 7px; border-radius: 9px; }
+    .freq-high { background: #E6F1FB; color: #185FA5; }
+    .freq-med { background: #EAF3DE; color: #3B6D11; }
+    .freq-low { background: #FAEEDA; color: #854F0B; }
+    .freq-vlow { background: #F1EFE8; color: #5F5E5A; }
+    .progress-wrap { margin: 6px 0 4px; }
+    .progress-label { display: flex; justify-content: space-between; font-size: 10px; color: #888; margin-bottom: 3px; }
+    .progress-bar { height: 4px; border-radius: 2px; background: #e0dfd8; overflow: hidden; }
+    .progress-fill { height: 100%; border-radius: 2px; transition: width .3s; }
+    .fill-ok { background: #3B6D11; }
+    .fill-soon { background: #EF9F27; }
+    .fill-due { background: #185FA5; }
+    .fill-over { background: #A32D2D; }
+    .s-method { font-size: 11px; color: #666; line-height: 1.45; padding-top: 6px; border-top: 0.5px solid #e0dfd8; margin-top: 4px; }
+    .log-btn { font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 500; padding: 5px 10px; border-radius: 8px; border: 0.5px solid #ccc; background: #eeede9; color: #666; cursor: pointer; transition: all .15s; margin-top: 8px; display: block; }
+    .log-btn:hover { background: #EAF3DE; color: #3B6D11; border-color: #3B6D11; }
+    .log-btn.just-logged { background: #EAF3DE; color: #3B6D11; border-color: #3B6D11; }
+    .wfilter-bar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1rem; }
+    .wfilter-btn { font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 500; padding: 5px 12px; border-radius: 16px; border: 0.5px solid #ccc; background: #fff; color: #666; cursor: pointer; transition: all .18s; }
+    .wfilter-btn.active, .wfilter-btn:hover { background: #185FA5; color: #fff; border-color: #185FA5; }
+    .sched-card.watered-card { border: 0.5px solid #b8dba4; border-left: 3px solid #3B6D11; opacity: 0.75; }
+    .no-cards { text-align: center; padding: 2rem; color: #888; font-size: 13px; grid-column: 1/-1; }
+
+    @media (max-width: 600px) {
+      .kit-header h1 { font-size: 1.6rem; }
+      .plant-grid, .schedule-grid { grid-template-columns: 1fr; }
+      .search-wrap input { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+<div class="kit-wrap">
+  <div class="kit-header">
+    <h1>Plant Care Kit</h1>
+    <p>Singapore · 14 plants · tropical climate edition</p>
+  </div>
+
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('water', this)">Watering plan</button>
+    <button class="tab-btn" onclick="switchTab('cards', this)">Plant cards</button>
+  </div>
+
+  <!-- PLANT CARDS TAB -->
+  <div id="tab-cards" style="display:none;">
+    <div class="climate-banner">
+      <div style="font-size:18px;flex-shrink:0;margin-top:1px;">🌡</div>
+      <div class="climate-text">
+        <strong>Adapted for Singapore's tropical climate</strong> — year-round heat (27–34°C), high humidity (70–90%), frequent afternoon rain. No dormancy season; fertilize year-round.
+        <div class="climate-pills">
+          <span class="climate-pill warn">No dormancy</span>
+          <span class="climate-pill warn">Overwatering risk high</span>
+          <span class="climate-pill info">Year-round feeding</span>
+          <span class="climate-pill warn">Shade cloth at midday</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="legend">
+      <div class="legend-title">Homemade fertilizer key</div>
+      <span class="legend-item ft-banana">Banana peel powder</span>
+      <span class="legend-item ft-rice">Fermented rice water</span>
+      <span class="legend-item ft-egg">Eggshell powder</span>
+      <span class="legend-item ft-coffee">Coffee grounds</span>
+      <span class="legend-item ft-compost">Compost tea</span>
+      <span class="legend-item ft-combo">Banana + egg + coffee combo</span>
+    </div>
+
+    <div class="controls">
+      <div class="search-wrap"><input type="text" id="searchInput" placeholder="Search plants…" oninput="filterCards()" /></div>
+      <div class="filter-bar">
+        <button class="filter-btn active" onclick="setFilter('all', this)">All plants</button>
+        <button class="filter-btn" onclick="setFilter('easy', this)">Easy care</button>
+        <button class="filter-btn" onclick="setFilter('moderate', this)">Moderate</button>
+        <button class="filter-btn" onclick="setFilter('hard', this)">Challenging</button>
+        <button class="filter-btn" onclick="setFilter('indoor', this)">Indoor</button>
+        <button class="filter-btn" onclick="setFilter('outdoor', this)">Outdoor</button>
+      </div>
+    </div>
+    <div class="plant-grid" id="plantGrid"></div>
+  </div>
+
+  <!-- WATERING PLAN TAB — dynamic -->
+  <div id="tab-water">
+    <div class="tip-box">
+      <strong>How this works:</strong> Each plant tracks when it was last watered and calculates the next due date from there. Tap <em>Watered today</em> on any card to reset its countdown. If you don't water on the due day, it carries forward as overdue until logged.
+    </div>
+    <div class="today-bar">
+      <div>
+        <div class="today-label">Viewing schedule for</div>
+        <div class="today-date" id="viewingDateLabel"></div>
+      </div>
+      <button class="wfilter-btn active" onclick="jumpToToday()">Today</button>
+    </div>
+    <div class="section-label">Select a day</div>
+    <div class="cal-strip" id="calStrip"></div>
+    <div class="wfilter-bar">
+      <button class="wfilter-btn active" onclick="setStatusFilter('all',this)">All plants</button>
+      <button class="wfilter-btn" onclick="setStatusFilter('overdue',this)">Overdue</button>
+      <button class="wfilter-btn" onclick="setStatusFilter('due',this)">Due today</button>
+      <button class="wfilter-btn" onclick="setStatusFilter('upcoming',this)">Upcoming</button>
+    </div>
+    <div class="schedule-grid" id="scheduleGrid"></div>
+
+    <div id="wateredSection" style="display:none;">
+      <div class="section-label" style="margin-top:1.5rem;">✓ Watered today</div>
+      <div class="schedule-grid" id="wateredGrid"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const FERT_LABELS = {
+  'ft-banana': 'Banana peel powder', 'ft-rice': 'Fermented rice water',
+  'ft-egg': 'Eggshell powder', 'ft-coffee': 'Coffee grounds',
+  'ft-compost': 'Compost tea', 'ft-combo': 'Banana + egg + coffee combo'
+};
+const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+const plants = [
+  { name: "Lemon", sci: "Citrus limon", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Lemon_fruit.jpg/320px-Lemon_fruit.jpg", diff: "hard", tags: ["outdoor"],
+    water: "Every 2–3 days; check daily in peak sun", sun: "Full sun 6+ hrs; shade cloth 11am–2pm", fertilizer: "Citrus fertilizer every 3–4 weeks; NPK 2-1-1", soil: "Well-draining, pH 5.5–6.5",
+    sgTip: "High humidity invites fungal issues — avoid wetting leaves; ensure good airflow.",
+    fertGood: ["ft-banana","ft-egg","ft-coffee","ft-combo","ft-compost"], fertNote: "The banana + egg + coffee combo supplies K and P for fruiting, Ca for branches, N for foliage. Compost tea boosts soil microbes.", fertAvoid: "",
+    waterDays: [0,3], waterFreq: "Every 2–3 days", waterFreqClass: "freq-high", waterMethod: "Water deeply at base until drainage flows; never overhead. Check soil daily in heat.", waterWeek: [1,0,0,1,0,0,1] },
+
+  { name: "Queen of the Night", sci: "Epiphyllum oxypetalum", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Epiphyllum_oxypetalum2.jpg/320px-Epiphyllum_oxypetalum2.jpg", diff: "easy", tags: ["indoor","outdoor"],
+    water: "Every 5–7 days; check soil before watering", sun: "Bright indirect light; avoid direct afternoon sun", fertilizer: "Low-nitrogen cactus fertilizer monthly", soil: "Well-draining cactus/orchid mix",
+    sgTip: "Thrives in Singapore's humidity. Grows well under a covered patio or dappled shade.",
+    fertGood: ["ft-banana","ft-rice"], fertNote: "Banana peel powder for K and P to encourage blooming. Fermented rice water boosts soil microbes gently.", fertAvoid: "Avoid coffee grounds (too acidic) and compost tea indoors — can attract pests.",
+    waterDays: [0,5], waterFreq: "Every 5–7 days", waterFreqClass: "freq-med", waterMethod: "Water thoroughly until drainage flows; let top 1–2 inches dry fully before next watering.", waterWeek: [1,0,0,0,0,1,0] },
+
+  { name: "Golden Pothos", sci: "Epipremnum aureum", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Epipremnum_aureum_31082012.jpg/320px-Epipremnum_aureum_31082012.jpg", diff: "easy", tags: ["indoor"],
+    water: "Every 4–7 days; check top 1–2 inches", sun: "Bright indirect light; avoid direct sun", fertilizer: "Balanced liquid fertilizer (20-20-20) monthly", soil: "Well-draining potting mix with perlite",
+    sgTip: "Grows extremely fast in Singapore — prune regularly to keep tidy.",
+    fertGood: ["ft-rice","ft-coffee","ft-compost"], fertNote: "Fermented rice water weekly is excellent. Coffee grounds add nitrogen for lush leaves. Compost tea monthly keeps the soil biome healthy.", fertAvoid: "",
+    waterDays: [0,4], waterFreq: "Every 4–7 days", waterFreqClass: "freq-med", waterMethod: "Water thoroughly until drainage flows; let top 1–2 inches dry out. Lift the pot — when light, it's time.", waterWeek: [1,0,0,0,1,0,0] },
+
+  { name: "Baker Aloe", sci: "Aloe bakeri", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Aloe_bakeri01.jpg/320px-Aloe_bakeri01.jpg", diff: "moderate", tags: ["indoor","outdoor"],
+    water: "Every 10–14 days; let soil dry completely", sun: "Bright morning sun only; shade after 11am", fertilizer: "Cactus fertilizer (10-10-10) every 6–8 weeks, half strength", soil: "Sandy, fast-draining cactus/succulent mix",
+    sgTip: "East-facing placement gives safe morning sun only — ideal for this plant.",
+    fertGood: ["ft-banana"], fertNote: "Banana peel powder mixed lightly into topsoil — K and P without excess nitrogen or acidity. Apply sparingly every 6–8 weeks.", fertAvoid: "Avoid coffee grounds, compost tea, and rice water — excess moisture and nitrogen promotes root rot.",
+    waterDays: [1], waterFreq: "Every 10–14 days", waterFreqClass: "freq-vlow", waterMethod: "Soak-and-dry: water deeply until drainage flows, then wait for soil to dry completely. Do not water if soil is still cool to the touch.", waterWeek: [0,1,0,0,0,0,0] },
+
+  { name: "Burle Marx Philodendron", sci: "Philodendron burle-marxii", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Philodendron_imbe_-_Stuttgarter_Staudensichtungsgarten_-_DSC05498.jpg/320px-Philodendron_imbe_-_Stuttgarter_Staudensichtungsgarten_-_DSC05498.jpg", diff: "easy", tags: ["indoor"],
+    water: "Every 5–7 days; check top 1–2 inches", sun: "Bright indirect light; never full midday Singapore sun", fertilizer: "Balanced liquid fertilizer (20-20-20) monthly; every 3 weeks during rapid growth", soil: "Rich, well-draining tropical mix",
+    sgTip: "Loves Singapore's heat and humidity — expect very fast, lush growth.",
+    fertGood: ["ft-rice","ft-coffee","ft-compost"], fertNote: "Fermented rice water every 1–2 weeks is ideal. Coffee grounds add nitrogen for big leaves. Compost tea monthly.", fertAvoid: "",
+    waterDays: [2,6], waterFreq: "Every 5–7 days", waterFreqClass: "freq-med", waterMethod: "Water until drainage flows; let top 2 inches dry before next watering. Check more frequently in aircon rooms.", waterWeek: [0,0,1,0,0,0,1] },
+
+  { name: "Desert Rose", sci: "Adenium obesum", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Adenium_obesum_2.jpg/320px-Adenium_obesum_2.jpg", diff: "easy", tags: ["outdoor"],
+    water: "Every 5–7 days dry; skip after heavy rain", sun: "Full sun — thrives in Singapore's intense sun", fertilizer: "Phosphorus-rich fertilizer monthly; stop during extended rain", soil: "Fast-draining cactus/sandy mix",
+    sgTip: "The heat triggers more blooms — place in the sunniest spot available.",
+    fertGood: ["ft-banana","ft-egg"], fertNote: "Banana peel powder encourages blooms (K+P). Eggshell powder strengthens the caudex. Use dried/powdered form only.", fertAvoid: "Avoid coffee grounds, rice water, and compost tea — excess moisture weakens the caudex.",
+    waterDays: [0,4], waterFreq: "Every 5–7 days", waterFreqClass: "freq-med", waterMethod: "Water deeply then let soil dry completely. Skip after any rainfall. Reduce to every 10–14 days during Singapore's wetter months (Nov–Jan).", waterWeek: [1,0,0,0,1,0,0] },
+
+  { name: "Indian Laurel", sci: "Ficus microcarpa", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d2/Ficus_microcarpa_Blanco2.289-cropped.jpg/320px-Ficus_microcarpa_Blanco2.289-cropped.jpg", diff: "easy", tags: ["outdoor"],
+    water: "Every 3–5 days for young trees; mature rely on rainfall", sun: "Full sun to partial shade; grows vigorously outdoors", fertilizer: "Balanced or high-nitrogen fertilizer every 3–4 weeks", soil: "Well-draining enriched loam with organic matter",
+    sgTip: "Common Singapore street tree — extremely well-adapted to local conditions.",
+    fertGood: ["ft-coffee","ft-compost","ft-combo"], fertNote: "Coffee grounds around the base for steady nitrogen. Compost tea every 2–3 weeks. The combo liquid is an excellent balanced option.", fertAvoid: "",
+    waterDays: [1,4], waterFreq: "Every 3–5 days (young); rainfall when mature", waterFreqClass: "freq-med", waterMethod: "Deep watering at root base until thoroughly soaked. Established trees largely self-sufficient from Singapore's rainfall; water only during prolonged dry spells.", waterWeek: [0,1,0,0,1,0,0] },
+
+  { name: "Snake Plant", sci: "Dracaena trifasciata", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fb/Snake_plant_%28Dracaena_trifasciata%29.jpg/320px-Snake_plant_%28Dracaena_trifasciata%29.jpg", diff: "easy", tags: ["indoor"],
+    water: "Every 10–14 days; overwatering in humidity is the main risk", sun: "Low to bright indirect light; great for offices", fertilizer: "Balanced fertilizer (10-10-10) at half strength every 6–8 weeks", soil: "Well-draining cactus/potting mix",
+    sgTip: "Ideal for Singapore offices and homes. Handles aircon very well.",
+    fertGood: ["ft-rice"], fertNote: "Diluted fermented rice water once a month is the safest option — gentle for this light feeder.", fertAvoid: "Avoid coffee grounds (mould risk in humidity), compost tea (too rich), and banana peel liquid indoors.",
+    waterDays: [1], waterFreq: "Every 10–14 days", waterFreqClass: "freq-vlow", waterMethod: "Water thoroughly then allow to dry completely — the entire pot, not just the top inch. Lift the pot; when very light, it's time. Never leave standing in water.", waterWeek: [0,1,0,0,0,0,0] },
+
+  { name: "Common Asparagus Fern", sci: "Asparagus setaceus", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/64/Asparagus_setaceus.jpg/320px-Asparagus_setaceus.jpg", diff: "easy", tags: ["indoor","outdoor"],
+    water: "Every 2–3 days outdoors; every 4–5 days indoors; keep consistently moist", sun: "Bright indirect light; sheltered patio or shade garden", fertilizer: "Balanced liquid fertilizer at half strength every 2 weeks", soil: "Humus-rich, well-draining mix",
+    sgTip: "Loves Singapore's humidity — grows lushly. Great for shaded patios and balcony edges.",
+    fertGood: ["ft-rice","ft-coffee","ft-compost","ft-combo"], fertNote: "Active feeder — fermented rice water every 1–2 weeks, compost tea monthly, thin layer of coffee grounds, combo liquid every 3 weeks.", fertAvoid: "",
+    waterDays: [0,2,4,6], waterFreq: "Every 2–3 days (outdoor); every 4–5 days (indoor)", waterFreqClass: "freq-high", waterMethod: "Keep soil consistently moist (not soggy). Water in the morning to reduce fungal risk. Mist fronds occasionally outdoors.", waterWeek: [1,0,1,0,1,0,1] },
+
+  { name: "Mottled Spurge", sci: "Euphorbia lactea", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Euphorbia_lactea2.jpg/320px-Euphorbia_lactea2.jpg", diff: "easy", tags: ["indoor","outdoor"],
+    water: "Every 10–14 days; drainage critical — heavy rain can overwater", sun: "Full sun outdoors; avoid intense afternoon sun for pots", fertilizer: "Low-nitrogen cactus fertilizer (5-10-10) every 4–6 weeks", soil: "Sandy, fast-draining cactus mix; elevate pot off ground in wet season",
+    sgTip: "Handles heat well. Keep drainage holes clear during Singapore's wet season.",
+    fertGood: ["ft-banana"], fertNote: "Banana peel powder (dried, not liquid) every 6–8 weeks — K and P without the nitrogen or moisture that can harm Euphorbia.", fertAvoid: "Avoid coffee grounds, rice water, and compost tea — too much moisture promotes stem rot.",
+    waterDays: [1], waterFreq: "Every 10–14 days", waterFreqClass: "freq-vlow", waterMethod: "Water thoroughly when soil is fully dry. Elevate the pot so drainage holes don't sit in puddles. Skip entirely after any significant rainfall.", waterWeek: [0,1,0,0,0,0,0] },
+
+  { name: "Silver Inch Plant", sci: "Tradescantia zebrina", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/Tradescantia_zebrina_2.jpg/320px-Tradescantia_zebrina_2.jpg", diff: "easy", tags: ["indoor"],
+    water: "Every 4–6 days; check top inch of soil", sun: "Bright indirect light; morning light with afternoon shade outdoors", fertilizer: "Balanced liquid fertilizer monthly", soil: "Standard potting mix with perlite; replace every 12 months",
+    sgTip: "Grows very fast in Singapore — prune regularly. Colour is most vibrant in brighter light.",
+    fertGood: ["ft-rice","ft-coffee","ft-compost"], fertNote: "Fermented rice water every 1–2 weeks. Coffee grounds add nitrogen for vibrant foliage colour. Compost tea monthly.", fertAvoid: "",
+    waterDays: [0,4], waterFreq: "Every 4–6 days", waterFreqClass: "freq-med", waterMethod: "Water thoroughly until drainage flows; allow top inch to dry before rewatering. Avoid getting water on leaves to prevent spots on foliage.", waterWeek: [1,0,0,0,1,0,0] },
+
+  { name: "Japanese Garden Juniper", sci: "Juniperus procumbens", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/Juniperus_procumbens_3.jpg/320px-Juniperus_procumbens_3.jpg", diff: "hard", tags: ["outdoor"],
+    water: "Daily — check every morning; bonsai pots dry out rapidly", sun: "Full sun (6+ hrs); 30–50% shade cloth 11am–3pm", fertilizer: "Balanced liquid fertilizer every 3–4 weeks; organic pellets monthly", soil: "Well-draining bonsai mix (60% inorganic, 30% organic, 10% sand)",
+    sgTip: "Challenging in Singapore — requires shade cloth and very careful watering in tropical heat.",
+    fertGood: ["ft-compost","ft-banana"], fertNote: "Compost tea diluted 1:3 every 3–4 weeks. Banana peel powder for K. Keep all feeding light.", fertAvoid: "Avoid coffee grounds (acidifies bonsai soil rapidly), rice water (too starchy), and the combo mix (too strong for small bonsai soil volume).",
+    waterDays: [0,1,2,3,4,5,6], waterFreq: "Daily", waterFreqClass: "freq-high", waterMethod: "Check the soil surface every morning — if dry at half-inch depth, water immediately. Water slowly until drains from base. Mist foliage in afternoon. Never allow to dry out completely.", waterWeek: [1,1,1,1,1,1,1] },
+
+  { name: "Everfresh", sci: "Pithecellobium confertum", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Pithecellobium_confertum_var._confertum_(6975341205).jpg/320px-Pithecellobium_confertum_var._confertum_(6975341205).jpg", diff: "moderate", tags: ["indoor"], isNew: true,
+    water: "Every 2–3 days; keep soil consistently moist", sun: "Bright indirect light; east-facing window ideal", fertilizer: "Balanced liquid fertilizer at half strength every 2–4 weeks", soil: "Well-draining mix rich in organic matter; add perlite or vermiculite",
+    sgTip: "Popular in Singapore nurseries. Leaf drop when first moved is normal — it's adjusting.",
+    fertGood: ["ft-rice","ft-compost","ft-banana"], fertNote: "Fermented rice water every 1–2 weeks is ideal. Compost tea monthly. Banana peel powder for K and P.", fertAvoid: "Avoid coffee grounds directly on soil — causes surface mould in Singapore's humidity. Avoid the full combo mix (too strong for indoor use).",
+    waterDays: [0,3,6], waterFreq: "Every 2–3 days", waterFreqClass: "freq-high", waterMethod: "Keep soil consistently moist — not wet, not dry. Water when the top inch is nearly dry. Key indicator: if leaves stay closed during daylight hours, the plant is thirsty. Water immediately.", waterWeek: [1,0,0,1,0,0,1] },
+
+  { name: "Satin Pothos", sci: "Scindapsus pictus", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/31/Scindapsus_pictus_%27Argyraeus%27.jpg/320px-Scindapsus_pictus_%27Argyraeus%27.jpg", diff: "easy", tags: ["indoor"], isNew: true,
+    water: "Every 7–10 days; let top 2 inches dry out — more drought-tolerant than it looks", sun: "Bright indirect light; tolerates lower light but loses silver variegation", fertilizer: "Balanced liquid fertilizer (20-10-10) monthly at half strength", soil: "Well-draining mix: equal parts potting soil, peat moss, and perlite",
+    sgTip: "Singapore's humidity suits this plant well. Variegation fades in low light. Leaves curl when thirsty — a reliable signal.",
+    fertGood: ["ft-rice","ft-coffee","ft-compost"], fertNote: "Fermented rice water every 1–2 weeks for steady growth. Coffee grounds add nitrogen for fuller leaves. Compost tea monthly.", fertAvoid: "Avoid over-fertilizing — brown or black leaf tips indicate fertilizer burn. Flush soil with plain water if you see salt buildup.",
+    waterDays: [1], waterFreq: "Every 7–10 days", waterFreqClass: "freq-low", waterMethod: "Water thoroughly until drainage flows; let the top 2 inches dry completely. Lift the pot — when light, it's time. Leaves curl slightly at edges when thirsty. Bottom watering works very well for this plant.", waterWeek: [0,1,0,0,0,0,0] }
+];
+
+let activeFilter = 'all';
+
+const icons = {
+  water: `<svg class="care-icon" viewBox="0 0 24 24" fill="none" stroke="#378ADD" stroke-width="2"><path d="M12 2C6 10 4 14 4 17a8 8 0 0016 0c0-3-2-7-8-15z"/></svg>`,
+  sun: `<svg class="care-icon" viewBox="0 0 24 24" fill="none" stroke="#EF9F27" stroke-width="2"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.9" y1="4.9" x2="6.3" y2="6.3"/><line x1="17.7" y1="17.7" x2="19.1" y2="19.1"/><line x1="4.9" y1="19.1" x2="6.3" y2="17.7"/><line x1="17.7" y1="6.3" x2="19.1" y2="4.9"/></svg>`,
+  fertilizer: `<svg class="care-icon" viewBox="0 0 24 24" fill="none" stroke="#639922" stroke-width="2"><path d="M12 22V12M12 12C12 7 7 4 4 6M12 12C12 7 17 4 20 6"/><circle cx="12" cy="10" r="2"/></svg>`,
+  soil: `<svg class="care-icon" viewBox="0 0 24 24" fill="none" stroke="#854F0B" stroke-width="2"><path d="M3 20h18M5 20V9l7-5 7 5v11"/><rect x="9" y="14" width="6" height="6"/></svg>`
+};
+
+// ── Plant cards ───────────────────────────────────────────────────
+function switchTab(tab, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-cards').style.display = tab === 'cards' ? 'block' : 'none';
+  document.getElementById('tab-water').style.display = tab === 'water' ? 'block' : 'none';
+  if (tab === 'water') initWaterTab();
+}
+
+function setFilter(f, btn) {
+  activeFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  filterCards();
+}
+
+function filterCards() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const cards = document.querySelectorAll('.plant-card');
+  let visible = 0;
+  cards.forEach((card, i) => {
+    const p = plants[i];
+    const mf = activeFilter === 'all' || p.diff === activeFilter || p.tags.includes(activeFilter);
+    const ms = p.name.toLowerCase().includes(q) || p.sci.toLowerCase().includes(q);
+    card.style.display = (mf && ms) ? 'block' : 'none';
+    if (mf && ms) visible++;
+  });
+  let nr = document.querySelector('.no-results');
+  if (visible === 0) {
+    if (!nr) { nr = document.createElement('div'); nr.className = 'no-results'; nr.textContent = 'No plants match your search.'; document.getElementById('plantGrid').appendChild(nr); }
+  } else if (nr) nr.remove();
+}
+
+function renderCards() {
+  const grid = document.getElementById('plantGrid');
+  grid.innerHTML = plants.map(p => {
+    const diffLabel = p.diff.charAt(0).toUpperCase() + p.diff.slice(1) + ' care';
+    const locBadges = p.tags.map(t => `<span class="loc-badge">${t}</span>`).join('');
+    const newBadge = p.isNew ? '<span class="new-badge">New</span>' : '';
+    const fertTagsHtml = p.fertGood.map(f => `<span class="fert-tag ${f}">${FERT_LABELS[f]}</span>`).join('');
+    return `<div class="plant-card${p.isNew ? ' new-card' : ''}">
+      <img class="plant-img" src="${p.img}" alt="${p.name}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
+      <div class="plant-img-placeholder">🌿</div>
+      <div class="plant-body">
+        <div class="badge-row"><span class="difficulty-badge diff-${p.diff}">${diffLabel}</span>${newBadge}${locBadges}</div>
+        <div class="plant-name">${p.name}</div>
+        <div class="plant-sci">${p.sci}</div>
+        <div class="care-grid">
+          <div class="care-item"><div class="care-icon-label">${icons.water}<span class="care-label">Watering</span></div><div class="care-value">${p.water}</div></div>
+          <div class="care-item"><div class="care-icon-label">${icons.sun}<span class="care-label">Sunlight</span></div><div class="care-value">${p.sun}</div></div>
+          <div class="care-item"><div class="care-icon-label">${icons.fertilizer}<span class="care-label">Fertilizer</span></div><div class="care-value">${p.fertilizer}</div></div>
+          <div class="care-item"><div class="care-icon-label">${icons.soil}<span class="care-label">Soil</span></div><div class="care-value">${p.soil}</div></div>
+        </div>
+        <div class="fert-section">
+          <div class="fert-label">Homemade fertilizer</div>
+          <div class="fert-tags">${fertTagsHtml}</div>
+          <div class="fert-note-text">${p.fertNote}</div>
+          ${p.fertAvoid ? `<div class="fert-avoid">Avoid: ${p.fertAvoid}</div>` : ''}
+        </div>
+        <div class="sg-tip"><span class="sg-tip-label">Singapore tip: </span>${p.sgTip}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Dynamic watering plan ─────────────────────────────────────────
+const DAYS_SHORT = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+// Watering interval data keyed by plant name
+const waterData = {
+  'Lemon':                    { intervalMin:2,  intervalMax:3,  freqLabel:'Every 2–3 days',   freqClass:'freq-high', method:'Water deeply at base until drainage flows; never overhead. Check soil daily in heat.' },
+  'Queen of the Night':       { intervalMin:5,  intervalMax:7,  freqLabel:'Every 5–7 days',   freqClass:'freq-med',  method:'Water thoroughly until drainage flows; let top 1–2 inches dry fully before next watering.' },
+  'Golden Pothos':            { intervalMin:4,  intervalMax:7,  freqLabel:'Every 4–7 days',   freqClass:'freq-med',  method:'Water thoroughly until drainage flows; let top 1–2 inches dry out. Lift the pot — when light, it\'s time.' },
+  'Baker Aloe':               { intervalMin:10, intervalMax:14, freqLabel:'Every 10–14 days', freqClass:'freq-vlow', method:'Soak-and-dry: water deeply until drainage flows, then wait for soil to dry completely.' },
+  'Burle Marx Philodendron':  { intervalMin:5,  intervalMax:7,  freqLabel:'Every 5–7 days',   freqClass:'freq-med',  method:'Water until drainage flows; let top 2 inches dry before next watering. Check more in aircon rooms.' },
+  'Desert Rose':              { intervalMin:5,  intervalMax:7,  freqLabel:'Every 5–7 days',   freqClass:'freq-med',  method:'Water deeply then let soil dry completely. Skip after any rainfall. Reduce to every 10–14 days in wetter months (Nov–Jan).' },
+  'Indian Laurel':            { intervalMin:3,  intervalMax:5,  freqLabel:'Every 3–5 days',   freqClass:'freq-med',  method:'Deep watering at root base. Established trees self-sufficient from rainfall; water only during dry spells.' },
+  'Snake Plant':              { intervalMin:10, intervalMax:14, freqLabel:'Every 10–14 days', freqClass:'freq-vlow', method:'Water thoroughly then allow to dry completely. Lift the pot; when very light, it\'s time. Never leave standing in water.' },
+  'Common Asparagus Fern':    { intervalMin:2,  intervalMax:3,  freqLabel:'Every 2–3 days',   freqClass:'freq-high', method:'Keep soil consistently moist (not soggy). Water in the morning to reduce fungal risk.' },
+  'Mottled Spurge':           { intervalMin:10, intervalMax:14, freqLabel:'Every 10–14 days', freqClass:'freq-vlow', method:'Water thoroughly when soil is fully dry. Elevate the pot. Skip entirely after any significant rainfall.' },
+  'Silver Inch Plant':        { intervalMin:4,  intervalMax:6,  freqLabel:'Every 4–6 days',   freqClass:'freq-med',  method:'Water thoroughly until drainage flows; allow top inch to dry before rewatering. Avoid getting water on leaves.' },
+  'Japanese Garden Juniper':  { intervalMin:1,  intervalMax:2,  freqLabel:'Daily',             freqClass:'freq-high', method:'Check soil surface every morning — if dry at half-inch depth, water immediately. Mist foliage in afternoon.' },
+  'Everfresh':                { intervalMin:2,  intervalMax:3,  freqLabel:'Every 2–3 days',   freqClass:'freq-high', method:'Keep soil consistently moist. Water when top inch is nearly dry. If leaves stay closed during daylight, water immediately.' },
+  'Satin Pothos':             { intervalMin:7,  intervalMax:10, freqLabel:'Every 7–10 days',  freqClass:'freq-low',  method:'Water thoroughly until drainage flows; let the top 2 inches dry completely. Leaves curl slightly when thirsty.' },
+};
+
+const TODAY = new Date(); TODAY.setHours(0,0,0,0);
+let selectedDate = new Date(TODAY);
+let statusFilter = 'all';
+
+// In-memory cache of watering dates, synced with window.storage
+const waterLog = {};
+let storageReady = false;
+
+function storageKey(name) { return 'wlast_' + name.replace(/\s+/g,'_'); }
+
+function todayStr() {
+  return TODAY.toISOString().slice(0, 10);
+}
+
+function wasseredToday(p) {
+  const stored = waterLog[p.name];
+  if (!stored) return false;
+  return stored.slice(0, 10) === todayStr();
+}
+
+function getLastWatered(p) {
+  const wd = waterData[p.name];
+  const stored = waterLog[p.name];
+  if (stored) {
+    const d = new Date(stored);
+    d.setHours(0,0,0,0);
+    return d;
+  }
+  const d = new Date(TODAY); d.setDate(d.getDate() - wd.intervalMin);
+  return d;
+}
+
+async function setLastWatered(name, date) {
+  const d = new Date(date);
+  d.setHours(0,0,0,0);
+  const iso = d.toISOString();
+  waterLog[name] = iso;
+  try { await window.storage.set(storageKey(name), iso, true); } catch(e) { console.warn('storage set failed', e); }
+}
+
+async function loadWaterLog() {
+  for (const p of plants) {
+    try {
+      const result = await window.storage.get(storageKey(p.name), true);
+      if (result && result.value) waterLog[p.name] = result.value;
+    } catch(e) { /* not set yet */ }
+  }
+  storageReady = true;
+}
+
+function getDaysUntilDue(p, viewDate) {
+  const wd = waterData[p.name];
+  const last = getLastWatered(p);
+  const next = new Date(last); next.setDate(next.getDate() + wd.intervalMin);
+  return Math.round((next - viewDate) / 86400000);
+}
+
+async function initWaterTab() {
+  if (!storageReady) await loadWaterLog();
+  updateViewingLabel();
+  buildCalStrip();
+  renderSchedule();
+}
+
+function updateViewingLabel() {
+  const isToday = selectedDate.getTime() === TODAY.getTime();
+  document.getElementById('viewingDateLabel').textContent =
+    DAYS_SHORT[selectedDate.getDay()] + ', ' + selectedDate.getDate() + ' ' + MONTHS[selectedDate.getMonth()] + (isToday ? ' — Today' : '');
+}
+
+function jumpToToday() { selectedDate = new Date(TODAY); updateViewingLabel(); buildCalStrip(); renderSchedule(); }
+
+function buildCalStrip() {
+  const strip = document.getElementById('calStrip'); strip.innerHTML = '';
+  for (let i = -2; i <= 4; i++) {
+    const d = new Date(TODAY); d.setDate(d.getDate() + i);
+    const isToday = d.getTime() === TODAY.getTime();
+    const isSelected = d.getTime() === selectedDate.getTime();
+    const dueCount = plants.filter(p => getDaysUntilDue(p, d) <= 0 && !wasseredToday(p)).length;
+    const cell = document.createElement('div');
+    cell.className = 'cal-day' + (isSelected ? ' selected' : '') + (isToday && !isSelected ? ' today-marker' : '');
+    cell.innerHTML = `<div class="cd-name">${DAYS_SHORT[d.getDay()]}</div><div class="cd-date">${d.getDate()}</div><div class="cd-dots">${Array(Math.min(dueCount,5)).fill('<div class="cd-dot"></div>').join('')}</div>`;
+    cell.onclick = () => { selectedDate = new Date(d); selectedDate.setHours(0,0,0,0); updateViewingLabel(); buildCalStrip(); renderSchedule(); };
+    strip.appendChild(cell);
+  }
+}
+
+function setStatusFilter(f, btn) {
+  statusFilter = f;
+  document.querySelectorAll('.wfilter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderSchedule();
+}
+
+function makeCard(p, vd, isViewingToday) {
+  const wd = waterData[p.name];
+  const diff = getDaysUntilDue(p, vd);
+  const last = getLastWatered(p);
+  const next = new Date(last); next.setDate(next.getDate() + wd.intervalMin);
+  const daysSince = Math.round((vd - last) / 86400000);
+  const ratio = Math.min(daysSince / wd.intervalMin, 1.0);
+  const lastStr = `Last watered: ${DAYS_SHORT[last.getDay()]} ${last.getDate()} ${MONTHS[last.getMonth()]}`;
+  const nextStr = diff > 0 ? ` · Next due: ${DAYS_SHORT[next.getDay()]} ${next.getDate()} ${MONTHS[next.getMonth()]}` : '';
+
+  let cardClass, statusHtml, fillClass;
+  if (diff < 0) {
+    cardClass = 'overdue'; fillClass = 'fill-over';
+    statusHtml = `<span class="s-status overdue">⚠ Overdue by ${Math.abs(diff)} day${Math.abs(diff)!==1?'s':''}</span>`;
+  } else if (diff === 0) {
+    cardClass = 'due-today'; fillClass = 'fill-due';
+    statusHtml = `<span class="s-status due">💧 Due today</span>`;
+  } else if (diff === 1) {
+    cardClass = ''; fillClass = 'fill-soon';
+    statusHtml = `<span class="s-status ok">Due tomorrow</span>`;
+  } else {
+    cardClass = ''; fillClass = ratio > 0.7 ? 'fill-soon' : 'fill-ok';
+    statusHtml = `<span class="s-status ok">Due in ${diff} days</span>`;
+  }
+
+  const logBtn = isViewingToday
+    ? `<button class="log-btn" id="logbtn-${p.name.replace(/\s+/g,'_')}" onclick="logWatered('${p.name}')">💧 Watered today</button>`
+    : '';
+
+  return `<div class="sched-card ${cardClass}">
+    <div class="s-row">${statusHtml}<span class="freq-badge ${wd.freqClass}">${wd.freqLabel}</span></div>
+    <div class="s-name">${p.name}</div>
+    <div class="s-sci">${p.sci}</div>
+    <div class="s-last">${lastStr}${nextStr}</div>
+    <div class="progress-wrap">
+      <div class="progress-label"><span>${daysSince} day${daysSince!==1?'s':''} since watered</span><span>${wd.intervalMin} day target</span></div>
+      <div class="progress-bar"><div class="progress-fill ${fillClass}" style="width:${Math.round(ratio*100)}%"></div></div>
+    </div>
+    <div class="s-method">${wd.method}</div>
+    ${logBtn}
+  </div>`;
+}
+
+function makeWateredCard(p) {
+  const wd = waterData[p.name];
+  const next = new Date(TODAY); next.setDate(next.getDate() + wd.intervalMin);
+  const nextStr = `Next due: ${DAYS_SHORT[next.getDay()]} ${next.getDate()} ${MONTHS[next.getMonth()]}`;
+  return `<div class="sched-card watered-card">
+    <div class="s-row"><span class="s-status ok">✓ Watered today</span><span class="freq-badge ${wd.freqClass}">${wd.freqLabel}</span></div>
+    <div class="s-name">${p.name}</div>
+    <div class="s-sci">${p.sci}</div>
+    <div class="s-last">${nextStr}</div>
+    <div class="progress-wrap">
+      <div class="progress-label"><span>0 days since watered</span><span>${wd.intervalMin} day target</span></div>
+      <div class="progress-bar"><div class="progress-fill fill-ok" style="width:0%"></div></div>
+    </div>
+    <div class="s-method">${wd.method}</div>
+    <button class="log-btn just-logged" disabled>✓ Logged!</button>
+  </div>`;
+}
+
+function renderSchedule() {
+  const grid = document.getElementById('scheduleGrid');
+  const vd = new Date(selectedDate);
+  const isViewingToday = vd.getTime() === TODAY.getTime();
+
+  // Split plants: watered today vs rest
+  const wateredToday = isViewingToday ? plants.filter(p => wasseredToday(p)) : [];
+  const remaining = plants.filter(p => !wasseredToday(p));
+
+  const sorted = [...remaining].sort((a, b) => getDaysUntilDue(a, vd) - getDaysUntilDue(b, vd));
+  const filtered = sorted.filter(p => {
+    if (statusFilter === 'all') return true;
+    const diff = getDaysUntilDue(p, vd);
+    if (statusFilter === 'overdue') return diff < 0;
+    if (statusFilter === 'due') return diff === 0;
+    if (statusFilter === 'upcoming') return diff > 0;
+    return true;
+  });
+
+  let html = '';
+
+  if (filtered.length === 0 && wateredToday.length === 0) {
+    html = `<div class="no-cards">No plants match this filter for the selected day.</div>`;
+  } else {
+    html = filtered.map(p => makeCard(p, vd, isViewingToday)).join('');
+  }
+
+  grid.innerHTML = html;
+
+  // Watered section
+  const wateredSection = document.getElementById('wateredSection');
+  if (wateredToday.length > 0) {
+    wateredSection.style.display = 'block';
+    document.getElementById('wateredGrid').innerHTML = wateredToday.map(p => makeWateredCard(p)).join('');
+  } else {
+    wateredSection.style.display = 'none';
+  }
+}
+
+async function logWatered(name) {
+  await setLastWatered(name, new Date(TODAY));
+  buildCalStrip();
+  renderSchedule();
+}
+
+initWaterTab();
+renderCards();
+</script>
+</body>
+</html>
